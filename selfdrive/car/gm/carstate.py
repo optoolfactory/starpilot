@@ -96,7 +96,7 @@ class CarState(CarStateBase):
 
     if self.CP.enableGasInterceptor:
       ret.gas = (pt_cp.vl["GAS_SENSOR"]["INTERCEPTOR_GAS"] + pt_cp.vl["GAS_SENSOR"]["INTERCEPTOR_GAS2"]) / 2.
-      threshold = 20 if self.CP.carFingerprint in CAMERA_ACC_CAR else 4 # Panda 515 threshold = 10.88. Set lower to avoid panda blocking messages and GasInterceptor faulting.
+      threshold = 12 if self.CP.carFingerprint in CAMERA_ACC_CAR else 4 # Panda 595 threshold = 10.88. Set lower to avoid panda blocking messages and GasInterceptor faulting.
       ret.gasPressed = ret.gas > threshold
     else:
       ret.gas = pt_cp.vl["AcceleratorPedal2"]["AcceleratorPedal2"] / 254.
@@ -226,13 +226,13 @@ class CarState(CarStateBase):
 
     if CP.carFingerprint in SDGM_CAR:
       messages += [
-        ("ECMPRDNL2", 40),
+        ("ECMPRDNL2", 25),
         ("AcceleratorPedal2", 40),
         ("ECMEngineStatus", 80),
       ]
     else:
       messages += [
-        ("ECMPRDNL2", 10),
+        ("ECMPRDNL2", 25),
         ("AcceleratorPedal2", 33),
         ("ECMEngineStatus", 100),
         ("BCMTurnSignals", 1),
@@ -254,7 +254,7 @@ class CarState(CarStateBase):
 
     if CP.transmissionType == TransmissionType.direct:
       messages += [
-        ("EBCMRegenPaddle", 50),
+        ("EBCMRegenPaddle", 25),
         ("EVDriveMode", 0),
       ]
 
