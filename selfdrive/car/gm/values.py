@@ -41,7 +41,7 @@ class CarControllerParams:
     self.ZERO_GAS = 6150  # Coasting
     self.MAX_BRAKE = 400  # ~ -4.0 m/s^2 with regen
 
-    if CP.carFingerprint in CAMERA_ACC_CAR and CP.carFingerprint not in CC_ONLY_CAR:
+    if CP.carFingerprint in CAMERA_ACC_CAR and CP.carFingerprint not in CC_ONLY_CAR and CP.carFingerprint != CAR.CHEVROLET_BOLT_EUV:
       self.MAX_GAS = 7496
       self.MAX_GAS_PLUS = 8848
       self.MAX_ACC_REGEN = 5610
@@ -62,11 +62,11 @@ class CarControllerParams:
     else:
       self.MAX_GAS = 7168  # Safety limit, not ACC max. Stock ACC >8192 from standstill.
       self.MAX_GAS_PLUS = 8191 # 8292 uses new bit, possible but not tested. Matches Twilsonco tw-main max
-      self.MAX_ACC_REGEN = 5500  # Max ACC regen is slightly less than max paddle regen
+      self.MAX_ACC_REGEN = 7110  # Max ACC regen is slightly less than max paddle regen
       self.INACTIVE_REGEN = 5500
       # ICE has much less engine braking force compared to regen in EVs,
       # lower threshold removes some braking deadzone
-      self.max_regen_acceleration = -1. if CP.carFingerprint in EV_CAR else -0.1
+      self.max_regen_acceleration = -3. if CP.carFingerprint in EV_CAR else -0.1
       self.BRAKE_SWITCH_MAX = self.MAX_ACC_REGEN if CP.carFingerprint in EV_CAR else self.ZERO_GAS
 
     self.GAS_LOOKUP_BP = [self.max_regen_acceleration, 0., self.ACCEL_MAX]
@@ -83,8 +83,8 @@ class CarControllerParams:
   # determined by letting Volt regen to a stop in L gear from 89mph,
   # and by letting off gas and allowing car to creep, for determining
   # the positive threshold values at very low speed
-  EV_GAS_BRAKE_THRESHOLD_BP = [1.29, 1.52, 1.55, 1.6, 1.7, 1.8, 2.0, 2.2, 2.5, 5.52, 9.6, 20.5, 23.5, 35.0] # [m/s]
-  EV_GAS_BRAKE_THRESHOLD_V = [0.0, -0.14, -0.16, -0.18, -0.215, -0.255, -0.32, -0.41, -0.5, -0.72, -0.895, -1.125, -1.145, -1.16] # [m/s^s]
+  EV_GAS_BRAKE_THRESHOLD_BP = [1.12, 3.35, 5.59, 7.82, 10.06, 12.29, 14.53, 16.76, 19.0, 21.23, 23.47, 25.7, 27.94, 30.18, 32.41, 34.65]
+  EV_GAS_BRAKE_THRESHOLD_V = [-0.49, -0.59, -0.64, -0.66, -0.68, -0.78, -0.93, -1.0, -1.09, -1.1, -1.23, -1.28, -1.35, -1.4, -1.41, -1.46]
 
   def update_ev_gas_brake_threshold(self, v_ego):
     gas_brake_threshold = interp(v_ego, self.EV_GAS_BRAKE_THRESHOLD_BP, self.EV_GAS_BRAKE_THRESHOLD_V)
@@ -329,6 +329,7 @@ FW_QUERY_CONFIG = FwQueryConfig(
 EV_CAR = {CAR.CHEVROLET_VOLT, CAR.CHEVROLET_BOLT_EUV, CAR.CHEVROLET_VOLT_CC, CAR.CHEVROLET_BOLT_CC}
 CC_ONLY_CAR = {CAR.CHEVROLET_VOLT_CC, CAR.CHEVROLET_BOLT_CC, CAR.CHEVROLET_EQUINOX_CC, CAR.CHEVROLET_SUBURBAN_CC, CAR.GMC_YUKON_CC, CAR.CADILLAC_CT6_CC, CAR.CHEVROLET_TRAILBLAZER_CC, CAR.CADILLAC_XT5_CC, CAR.CHEVROLET_MALIBU_CC}
 # CC_ONLY_CAR = set(c for c in CAR if str(c).endswith('_CC'))
+CC_REGEN_PADDLE_CAR = {CAR.CHEVROLET_BOLT_CC, CAR.CHEVROLET_BOLT_EUV}
 
 # We're integrated at the Safety Data Gateway Module on these cars
 SDGM_CAR = {CAR.CADILLAC_XT4, CAR.CHEVROLET_TRAVERSE, CAR.BUICK_BABYENCLAVE}

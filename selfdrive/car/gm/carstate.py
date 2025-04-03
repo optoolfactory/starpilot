@@ -232,7 +232,7 @@ class CarState(CarStateBase):
       ]
     else:
       messages += [
-        ("ECMPRDNL2", 10),
+        ("ECMPRDNL2", 40),
         ("AcceleratorPedal2", 33),
         ("ECMEngineStatus", 100),
         ("BCMTurnSignals", 1),
@@ -254,7 +254,7 @@ class CarState(CarStateBase):
 
     if CP.transmissionType == TransmissionType.direct:
       messages += [
-        ("EBCMRegenPaddle", 50),
+        ("EBCMRegenPaddle", 40),
         ("EVDriveMode", 0),
       ]
 
