@@ -69,7 +69,7 @@ class CarController(CarControllerBase):
       return 0., False
 
     zero = 0.15625  # 40/256
-    if accel < -0.5:
+    if accel < -0.2:
       pedal_gas = 0
       press_regen_paddle = True
       speed_mps = [0.559, 1.678, 2.797, 3.916, 5.035, 6.154, 7.273, 8.392, 9.511, 10.63,
@@ -116,7 +116,7 @@ class CarController(CarControllerBase):
        self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
        self.CP.openpilotLongitudinalControl and
        CC.longActive and
-       actuators.accel < -0.5
+       actuators.accel < -0.2
      )
  
      # Always send PRNDL2 command when OpenPilot is in control
