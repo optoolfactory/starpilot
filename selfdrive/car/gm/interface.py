@@ -29,8 +29,8 @@ CAM_MSG = 0x320  # AEBCmd
 ACCELERATOR_POS_MSG = 0xbe
 
 NON_LINEAR_TORQUE_PARAMS = {
-  CAR.CHEVROLET_BOLT_EUV: {"left": [2.22, 0.81, 0.165, -0.04], "right": [2.22, 0.81, 0.22, -0.04]},
-  CAR.CHEVROLET_BOLT_CC: {"left": [2.22, 0.81, 0.165, -0.04], "right": [2.22, 0.81, 0.22, -0.04]},
+  CAR.CHEVROLET_BOLT_EUV: {"left": [2.15, 1.0, 0.17, -0.04], "right": [2.15, 1.0, 0.21, -0.04]},
+  CAR.CHEVROLET_BOLT_CC: {"left": [2.15, 1.0, 0.17, -0.04], "right": [2.15, 1.0, 0.21, -0.04]},
   CAR.GMC_ACADIA: {"left": [4.78, 1.0, 0.31, 0.05], "right": [4.78, 1.0, 0.31, 0.05]},
   CAR.CHEVROLET_SILVERADO: {"left": [3.30, 1.0, 0.25, 0.05], "right": [3.30, 1.0, 0.25, 0.05]}
 }
