@@ -121,6 +121,7 @@ class CarController(CarControllerBase):
  
       regen_active = (
        self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
+       self.CP.openpilotLongitudinalControl and
        CC.longActive and
        self.regen_paddle_pressed
      )
