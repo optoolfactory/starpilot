@@ -70,10 +70,6 @@ class CarController(CarControllerBase):
     if not long_active:
       return 0., False
 
-    if self.aego < -0.5:
-      self.regen_paddle_pressed = True
-    elif self.aego > 0.1:
-      self.regen_paddle_pressed = False
         
     press_regen_paddle = self.regen_paddle_pressed
 
@@ -105,6 +101,10 @@ class CarController(CarControllerBase):
   def update(self, CC, CS, now_nanos, frogpilot_toggles):
     self.CS = CS
     self.aego = CS.out.aEgo
+    if self.aego < -0.5:
+      self.regen_paddle_pressed = True
+    elif self.aego > 0.1:
+      self.regen_paddle_pressed = False
     actuators = CC.actuators
     accel = brake_accel = actuators.accel
     hud_control = CC.hudControl
