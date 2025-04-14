@@ -117,13 +117,7 @@ class CarController(CarControllerBase):
     can_sends = []
 
 
-     # Send regen paddle and PRNDL2 commands at 40Hz using alternating 2/3 frame interval
-    frames_since_last = self.frame - getattr(self, "last_trigger_frame_40hz", -3)
-    target_wait = 3 if getattr(self, "wait_long_40hz", False) else 2
- 
-    if frames_since_last >= target_wait:
-      self.last_trigger_frame_40hz = self.frame
-      self.wait_long_40hz = not getattr(self, "wait_long_40hz", False)
+    if self.frame % 2 == 1:
  
       regen_active = (
        self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
