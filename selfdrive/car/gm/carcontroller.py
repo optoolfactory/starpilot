@@ -100,7 +100,7 @@ class CarController(CarControllerBase):
 
   def update(self, CC, CS, now_nanos, frogpilot_toggles):
     self.CS = CS
-    self.aego = CS.out.aEgo
+    self.aego = self.CS.out.aEgo
     if self.aego < -0.5:
       self.regen_paddle_pressed = True
     elif self.aego > 0.1:
