@@ -44,7 +44,7 @@ class CarControllerParams:
     if CP.carFingerprint in CAMERA_ACC_CAR and CP.carFingerprint not in CC_ONLY_CAR:
       self.MAX_GAS = 7496
       self.MAX_GAS_PLUS = 8848
-      self.MAX_ACC_REGEN = 5610
+      self.MAX_ACC_REGEN = 7110
       self.INACTIVE_REGEN = 5650
       # Camera ACC vehicles have no regen while enabled.
       # Camera transitions to MAX_ACC_REGEN from ZERO_GAS and uses friction brakes instantly
@@ -77,8 +77,8 @@ class CarControllerParams:
     self.BRAKE_LOOKUP_BP = [self.ACCEL_MIN, 0.]
     self.BRAKE_LOOKUP_V = [self.MAX_BRAKE, 0.]
 
-    self.BRAKE_SWITCH_LOOKUP_BP = [0.5, 10]
-    self.BRAKE_SWITCH_LOOKUP_V = [self.ZERO_GAS, self.BRAKE_SWITCH_MAX]
+    self.BRAKE_SWITCH_LOOKUP_BP = [0.5, 8.9, 9.0, 20.0]
+    self.BRAKE_SWITCH_LOOKUP_V = [self.BRAKE_SWITCH_MAX, self.BRAKE_SWITCH_MAX, self.ZERO_GAS, self.ZERO_GAS]
 
   # determined by letting Volt regen to a stop in L gear from 89mph,
   # and by letting off gas and allowing car to creep, for determining
