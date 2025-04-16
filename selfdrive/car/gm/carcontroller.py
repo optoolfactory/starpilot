@@ -84,10 +84,10 @@ class CarController(CarControllerBase):
 
     gain = interp(car_velocity, speed_mps, regen_gain_ratio)
     pedaloffset = interp(car_velocity, [0., 3, 6, 30], [0.10, 0.175, 0.240, 0.240])
-    accel_cutoff = -0.5 * gain
+    accel_cutoff = -0.5
     
     if press_regen_paddle:
-      scaled_accel = accel * gain
+      scaled_accel = accel / gain
     else:
       scaled_accel = accel
 
@@ -105,10 +105,10 @@ class CarController(CarControllerBase):
     if not hasattr(self, 'regen_paddle_timer'):
       self.regen_paddle_timer = 0
 
-    if self.aego < -0.5:
+    if self.aego < -0.7:
       self.regen_paddle_timer += 1
-    elif self.aego > 0.1:
-      self.regen_paddle_timer = 0
+    else:
+      self.regen_paddle_timer = max(self.regen_paddle_timer - 1, 0)
 
     self.regen_paddle_pressed = self.regen_paddle_timer >= 20
     actuators = CC.actuators
@@ -123,7 +123,8 @@ class CarController(CarControllerBase):
     can_sends = []
 
 
-    if self.frame % 2 == 1:
+    # Send commands at 40hz
+    if self.frame % 2 == 0 and (self.frame // 2) % 5 != 3:
  
       regen_active = (
        self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
