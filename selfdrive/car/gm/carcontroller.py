@@ -123,7 +123,7 @@ class CarController(CarControllerBase):
 
 
     # Send commands for PRNDL2 and regen paddle with unified timing
-    frames_since_last = self.frame - getattr(self, "last_trigger_frame_40hz", -3)
+    frames_since_last = self.frame - getattr(self, "last_trigger_frame_40hz", -4)
     target_wait = 3 if getattr(self, "wait_long_40hz", False) else 2
 
     if frames_since_last >= target_wait:
