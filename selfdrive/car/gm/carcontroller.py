@@ -122,23 +122,30 @@ class CarController(CarControllerBase):
     can_sends = []
 
 
-    # Send commands for PRNDL2 and regen paddle with staggered timing (20Hz alternating)
-    regen_active = (
-      self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
-      self.CP.openpilotLongitudinalControl and
-      CC.longActive and
-      self.regen_paddle_pressed
-    )
+    # Send commands for PRNDL2 and regen paddle with unified timing
+    frames_since_last = self.frame - getattr(self, "last_trigger_frame_40hz", -3)
+    target_wait = 3 if getattr(self, "wait_long_40hz", False) else 2
 
-    prndl2_value = 5 if regen_active else 6
-    manual_mode = 1 if prndl2_value == 5 else 0
-    regen_paddle_value = 2 if regen_active else 0
+    if frames_since_last >= target_wait:
+      self.last_trigger_frame_40hz = self.frame
+      self.wait_long_40hz = not getattr(self, "wait_long_40hz", False)
 
-    if self.frame % 5 == 0:
+      regen_active = (
+        self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
+        self.CP.openpilotLongitudinalControl and
+        CC.longActive and
+        self.regen_paddle_pressed
+      )
+
+      prndl2_value = 5 if regen_active else 6
+      manual_mode = 1 if prndl2_value == 5 else 0
+
+      can_sends.append(gmcan.create_prndl2_command(
+        self.packer_pt, CanBus.POWERTRAIN, prndl2_value, manual_mode
+      ))
+
+      regen_paddle_value = 2 if regen_active else 0
       can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, regen_paddle_value))
-
-    if self.frame % 5 == 2:
-      can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, prndl2_value, manual_mode))
 
     # Steering (Active: 50Hz, inactive: 10Hz)
     steer_step = self.params.STEER_STEP if CC.latActive else self.params.INACTIVE_STEER_STEP
