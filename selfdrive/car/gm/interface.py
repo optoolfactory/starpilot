@@ -30,7 +30,7 @@ ACCELERATOR_POS_MSG = 0xbe
 
 NON_LINEAR_TORQUE_PARAMS = {
   CAR.CHEVROLET_BOLT_EUV: {"left": [2.15, 1.0, 0.17, -0.04], "right": [2.15, 1.0, 0.21, -0.04]},
-  CAR.CHEVROLET_BOLT_CC: {"left": [2.15, 1.0, 0.17, -0.04], "right": [2.15, 1.0, 0.21, -0.04]},
+  CAR.CHEVROLET_BOLT_CC: {"left": [2.15, 1.0, 0.17, -0.04], "right": [2.15, 1.0, 0.21, -0.04]},  # Will be overridden dynamically
   CAR.GMC_ACADIA: {"left": [4.78, 1.0, 0.31, 0.05], "right": [4.78, 1.0, 0.31, 0.05]},
   CAR.CHEVROLET_SILVERADO: {"left": [3.30, 1.0, 0.25, 0.05], "right": [3.30, 1.0, 0.25, 0.05]}
 }
@@ -73,6 +73,16 @@ class CarInterface(CarInterfaceBase):
     # This has big effect on the stability about 0 (noise when going straight)
     # ToDo: To generalize to other GMs, explore tanh function as the nonlinear
     non_linear_torque_params = NON_LINEAR_TORQUE_PARAMS.get(self.CP.carFingerprint)
+    # Override with user-adjustable values if using advanced lateral tuning panel
+    if self.CP.carFingerprint == CAR.CHEVROLET_BOLT_CC:
+      a = float(params.get("SteerFriction") or 2.15)
+      b = float(params.get("SteerKP") or 1.0)
+      left_c = float(params.get("SteerLatAccel") or 0.17)
+      right_c = float(params.get("SteerRatio") or 0.21)
+      non_linear_torque_params = {
+        "left": [a, b, left_c, -0.04],
+        "right": [a, b, right_c, -0.04]
+      }
     assert non_linear_torque_params, "The params are not defined"
     if latcontrol_inputs.lateral_acceleration >= 0:
       params = non_linear_torque_params["right"]
