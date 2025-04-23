@@ -381,7 +381,6 @@ class FrogPilotVariables:
     for k, v, _ in frogpilot_default_params:
       params_default.put(k, v)
 
-
     params_memory.put("FrogPilotTuningLevels", json.dumps(self.tuning_levels))
 
   def update(self, holiday_theme, started):
@@ -453,24 +452,15 @@ class FrogPilotVariables:
     toggle.force_auto_tune = advanced_lateral_tuning and not has_auto_tune and not is_pid_car and (params.get_bool("ForceAutoTune") if tuning_level >= level["ForceAutoTune"] else default.get_bool("ForceAutoTune"))
     toggle.force_auto_tune_off = advanced_lateral_tuning and has_auto_tune and not is_pid_car and (params.get_bool("ForceAutoTuneOff") if tuning_level >= level["ForceAutoTuneOff"] else default.get_bool("ForceAutoTuneOff"))
     stock_steer_friction = params.get_float("SteerFrictionStock")
-    ui_steer_friction = params.get_float("SteerFriction") if advanced_lateral_tuning and tuning_level >= level["SteerFriction"] else stock_steer_friction
-    toggle.steer_friction = stock_steer_friction  # use hardcoded value
-    # Always show friction slider
-    toggle.use_custom_steer_friction = True
-
-    ui_steer_kp = params.get_float("SteerKP") if advanced_lateral_tuning and not is_pid_car and tuning_level >= level["SteerKP"] else params.get_float("SteerKPStock")
-    toggle.steer_kp = [[0], [0.0]]  # override actual value
-
+    toggle.steer_friction = params.get_float("SteerFriction") if advanced_lateral_tuning and tuning_level >= level["SteerFriction"] else stock_steer_friction
+    toggle.use_custom_steer_friction = toggle.steer_friction != stock_steer_friction and not is_pid_car and not toggle.force_auto_tune or toggle.force_auto_tune_off
+    toggle.steer_kp = [[0], [params.get_float("SteerKP") if advanced_lateral_tuning and not is_pid_car and tuning_level >= level["SteerKP"] else params.get_float("SteerKPStock")]]
     stock_steer_lat_accel_factor = params.get_float("SteerLatAccelStock")
-    ui_lat_accel = params.get_float("SteerLatAccel") if advanced_lateral_tuning and tuning_level >= level["SteerLatAccel"] else stock_steer_lat_accel_factor
-    toggle.steer_lat_accel_factor = stock_steer_lat_accel_factor
-    # Always show lateral accel slider
-    toggle.use_custom_lat_accel_factor = True
-
+    toggle.steer_lat_accel_factor = params.get_float("SteerLatAccel") if advanced_lateral_tuning and tuning_level >= level["SteerLatAccel"] else stock_steer_lat_accel_factor
+    toggle.use_custom_lat_accel_factor = toggle.steer_lat_accel_factor != stock_steer_lat_accel_factor and not is_pid_car and not toggle.force_auto_tune or toggle.force_auto_tune_off
     stock_steer_ratio = params.get_float("SteerRatioStock")
-    ui_steer_ratio = params.get_float("SteerRatio") if advanced_lateral_tuning and tuning_level >= level["SteerRatio"] else stock_steer_ratio
-    toggle.steer_ratio = stock_steer_ratio
-    toggle.use_custom_steer_ratio = ui_steer_ratio != stock_steer_ratio and not toggle.force_auto_tune or toggle.force_auto_tune_off
+    toggle.steer_ratio = params.get_float("SteerRatio") if advanced_lateral_tuning and tuning_level >= level["SteerRatio"] else stock_steer_ratio
+    toggle.use_custom_steer_ratio = toggle.steer_ratio != stock_steer_ratio and not toggle.force_auto_tune or toggle.force_auto_tune_off
 
     toggle.alert_volume_control = params.get_bool("AlertVolumeControl") if tuning_level >= level["AlertVolumeControl"] else default.get_bool("AlertVolumeControl")
     toggle.disengage_volume = params.get_int("DisengageVolume") if toggle.alert_volume_control and tuning_level >= level["DisengageVolume"] else default.get_int("DisengageVolume")
