@@ -143,17 +143,26 @@ class CarController(CarControllerBase):
     )
 
     if regen_active and (frames_since_last >= frame_wait) and last_prndl2_msg_ms > MIN_PRNDL_MSG_INTERVAL_MS:
-       self.last_prndl2_frame = self.frame
-       self.wait_long_40hz = not getattr(self, "wait_long_40hz", False)
- 
-       prndl2_value = 5
-       regen_paddle_value = 2
-       manual_mode = 1
- 
-       can_sends.append(gmcan.create_prndl2_command(
-         self.packer_pt, CanBus.POWERTRAIN, prndl2_value, manual_mode
-       ))
-       can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, regen_paddle_value))
+      self.last_prndl2_frame = self.frame
+      self.wait_long_40hz = not getattr(self, "wait_long_40hz", False)
+
+      prndl2_value = 5
+      regen_paddle_value = 2
+      manual_mode = 1
+
+      can_sends.append(gmcan.create_prndl2_command(
+        self.packer_pt, CanBus.POWERTRAIN, prndl2_value, manual_mode
+      ))
+      can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, regen_paddle_value))
+    elif not regen_active and getattr(self, "last_regen_active", False):
+      # Regen just turned off, send PRNDL2 = 5 -> 6 and paddle = 2 -> 0 once
+      prndl2_value = 6
+      regen_paddle_value = 0
+      manual_mode = 1
+      can_sends.append(gmcan.create_prndl2_command(
+        self.packer_pt, CanBus.POWERTRAIN, prndl2_value, manual_mode
+      ))
+      can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, regen_paddle_value))
 
 
     # Steering (Active: 50Hz, inactive: 10Hz)
@@ -337,5 +346,6 @@ class CarController(CarControllerBase):
     new_actuators.brake = self.apply_brake
     new_actuators.speed = self.apply_speed
 
+    self.last_regen_active = regen_active
     self.frame += 1
     return new_actuators, can_sends
