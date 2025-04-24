@@ -74,7 +74,6 @@ class CarController(CarControllerBase):
     if not long_active:
       return 0., False
 
-        
     press_regen_paddle = self.regen_paddle_pressed
 
     # Updated regen gain ratios from bin-averaged 60–0 deceleration sweep
@@ -88,16 +87,19 @@ class CarController(CarControllerBase):
 
     gain = interp(car_velocity, speed_mps, regen_gain_ratio)
     pedaloffset = interp(car_velocity, [0., 3, 6, 30], [0.10, 0.175, 0.240, 0.240])
-    accel_cutoff = -0.5 * gain
-    
+
     if press_regen_paddle:
       pedal_gas = pedaloffset + (accel / gain) * 0.6
-      pedal_gas = max(pedal_gas, 0.01)
     else:
-      pedal_gas = clip((pedaloffset + accel * 0.6), 0.0, 1.0)
+      pedal_gas = pedaloffset + accel * 0.6
 
-    pedal_gas = min(pedal_gas, 1.0)
-    
+    # Apply minimum gas floor for all accel > 0
+    zero = 0.15625  # 40 / 256
+    if accel > 0.:
+      pedal_gas = clip(((1 - zero) * pedal_gas + zero), 0., 1.)
+    else:
+      pedal_gas = clip(pedal_gas, 0., 1.)
+
     return pedal_gas, press_regen_paddle
 
 
@@ -130,9 +132,7 @@ class CarController(CarControllerBase):
     if hasattr(CS, "regen_paddle_ts_nanos") and CS.regen_paddle_ts_nanos != 0:
        self.last_oem_regen_paddle_ts_nanos = CS.regen_paddle_ts_nanos
 
-    frames_since_last = self.frame - getattr(self, "last_prndl2_frame", -4)
-    frame_wait = 3 if getattr(self, "wait_long_40hz", False) else 2
-     # Avoid spoofing PRNDL2/Paddle too soon after an OEM message (protect against fault overlap)
+    # Avoid spoofing PRNDL2/Paddle too soon after an OEM message (protect against fault overlap)
     last_prndl2_msg_ms = (now_nanos - max(self.last_oem_prndl2_ts_nanos, self.last_oem_regen_paddle_ts_nanos)) * 1e-6
 
     regen_active = (
@@ -142,7 +142,8 @@ class CarController(CarControllerBase):
       self.regen_paddle_pressed
     )
 
-    if regen_active and (frames_since_last >= frame_wait) and last_prndl2_msg_ms > MIN_PRNDL_MSG_INTERVAL_MS:
+    send_prndl_frame = self.frame % 3 != 0  # mimic steer logic at ~40Hz
+    if regen_active and send_prndl_frame and last_prndl2_msg_ms > MIN_PRNDL_MSG_INTERVAL_MS:
       self.last_prndl2_frame = self.frame
       self.wait_long_40hz = not getattr(self, "wait_long_40hz", False)
 
