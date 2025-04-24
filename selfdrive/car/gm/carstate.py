@@ -182,9 +182,6 @@ class CarState(CarStateBase):
 
     fp_ret.sportGear = pt_cp.vl["SportMode"]["SportMode"] == 1
 
-    # Track timestamps for OEM PRNDL2 and Regen Paddle messages (used to sync spoofing timing)
-    self.prndl2_ts_nanos = pt_cp.ts_nanos["ECMPRDNL2"]["PRNDL2"]
-    self.regen_paddle_ts_nanos = pt_cp.ts_nanos["EBCMRegenPaddle"]["RegenPaddle"]
     return ret, fp_ret
 
   @staticmethod
