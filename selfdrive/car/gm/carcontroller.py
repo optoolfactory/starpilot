@@ -99,6 +99,7 @@ class CarController(CarControllerBase):
   def update(self, CC, CS, now_nanos, frogpilot_toggles):
     self.CS = CS
     self.aego = self.CS.out.aEgo
+    press_regen_paddle = False
     # Regen paddle hysteresis (200ms = 20 frames)
     if not hasattr(self, 'regen_paddle_timer'):
       self.regen_paddle_timer = 0
@@ -339,6 +340,7 @@ class CarController(CarControllerBase):
     new_actuators.gas = self.apply_gas
     new_actuators.brake = self.apply_brake
     new_actuators.speed = self.apply_speed
+    new_actuators.regenPaddle = press_regen_paddle
 
     self.last_regen_active = regen_active
     self.frame += 1
