@@ -135,10 +135,9 @@ class CarController(CarControllerBase):
       self.regen_paddle_pressed
     )
 
-    send_prndl_frame = self.frame % 3 != 0  # mimic steer logic at ~40Hz
-    if regen_active and send_prndl_frame and last_prndl2_msg_ms > MIN_PRNDL_MSG_INTERVAL_MS:
+    send_prndl_frame = self.frame % 2 == 0  
+    if regen_active and send_prndl_frame and last_prndl2_msg_ms > MIN_PRNDL_MSG_INTERVAL_MS and not getattr(self, "last_regen_active", False):
       self.last_prndl2_frame = self.frame
-      self.wait_long_40hz = not getattr(self, "wait_long_40hz", False)
 
       prndl2_value = 5
       regen_paddle_value = 2
