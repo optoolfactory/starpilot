@@ -93,13 +93,6 @@ class CarController(CarControllerBase):
     else:
       pedal_gas = pedaloffset + accel * 0.6
 
-    # Apply minimum gas floor for all accel > 0
-    zero = 0.15625  # 40 / 256
-    if accel > 0.:
-      pedal_gas = clip(((1 - zero) * pedal_gas + zero), 0., 1.)
-    else:
-      pedal_gas = clip(pedal_gas, 0., 1.)
-
     return pedal_gas, press_regen_paddle
 
 
