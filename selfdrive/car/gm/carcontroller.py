@@ -137,7 +137,7 @@ class CarController(CarControllerBase):
 
     send_prndl_frame = self.frame % 2 == 0  
     # NOTE: OEM timing protection temporarily disabled for testing
-    if regen_active and send_prndl_frame and not getattr(self, "last_regen_active", False):
+    if regen_active and send_prndl_frame:
       self.last_prndl2_frame = self.frame
 
       prndl2_value = 5
