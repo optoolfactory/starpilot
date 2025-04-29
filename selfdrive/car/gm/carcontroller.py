@@ -135,27 +135,32 @@ class CarController(CarControllerBase):
       self.regen_paddle_pressed
     )
 
-    send_prndl_frame = self.frame % 2 == 0  
-    # NOTE: OEM timing protection temporarily disabled for testing
-    if regen_active and send_prndl_frame:
-      self.last_prndl2_frame = self.frame
+    # Paddle must be sent at 40hz which clogs the bus and delays steer frames; Logic avoids steer frames to prevent LKAS faults
+    send_prndl_frame = (self.frame % 5) in (1, 3)
+    frames_since_last_steer = self.frame - getattr(self, "last_steer_frame", -100)
+    last_steer_time_ms = (now_nanos - CS.loopback_lka_steering_cmd_ts_nanos) * 1e-6
 
-      prndl2_value = 5
+    self.regen_ready_to_send = getattr(self, "regen_ready_to_send", False)
+
+    # If frame contains a steer command, wait to send
+    if regen_active and send_prndl_frame and frames_since_last_steer >= 1 and last_steer_time_ms > 25:
+      self.regen_ready_to_send = True
+
+    # Send at next available frame
+    if self.regen_ready_to_send:
+      self.last_prndl2_frame = self.frame
+      prndl2_value = 5  # <-- GEN2 uses 5 for PRNDL2 ("L2 gear")
       regen_paddle_value = 2
       manual_mode = 1
-
-      can_sends.append(gmcan.create_prndl2_command(
-        self.packer_pt, CanBus.POWERTRAIN, prndl2_value, manual_mode
-      ))
+      can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, prndl2_value, manual_mode))
       can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, regen_paddle_value))
+      self.regen_ready_to_send = False
+
     elif not regen_active and getattr(self, "last_regen_active", False):
-      # Regen just turned off, send PRNDL2 = 5 -> 6 and paddle = 2 -> 0 once
       prndl2_value = 6
       regen_paddle_value = 0
-      manual_mode = 1
-      can_sends.append(gmcan.create_prndl2_command(
-        self.packer_pt, CanBus.POWERTRAIN, prndl2_value, manual_mode
-      ))
+      manual_mode = 0
+      can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, prndl2_value, manual_mode))
       can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, regen_paddle_value))
 
 
