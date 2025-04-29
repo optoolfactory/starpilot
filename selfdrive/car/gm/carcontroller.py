@@ -149,19 +149,15 @@ class CarController(CarControllerBase):
     # Send at next available frame
     if self.regen_ready_to_send:
       self.last_prndl2_frame = self.frame
-      prndl2_value = 5  # <-- GEN2 uses 5 for PRNDL2 ("L2 gear")
-      regen_paddle_value = 2
-      manual_mode = 1
-      can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, prndl2_value, manual_mode))
-      can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, regen_paddle_value))
+      press_regen_paddle = True
+      can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, press_regen_paddle))
+      can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, press_regen_paddle))
       self.regen_ready_to_send = False
 
     elif not regen_active and getattr(self, "last_regen_active", False):
-      prndl2_value = 6
-      regen_paddle_value = 0
-      manual_mode = 0
-      can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, prndl2_value, manual_mode))
-      can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, regen_paddle_value))
+      press_regen_paddle = False
+      can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, press_regen_paddle))
+      can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, press_regen_paddle))
 
 
     # Steering (Active: 50Hz, inactive: 10Hz)
