@@ -23,7 +23,7 @@ TransmissionType = car.CarParams.TransmissionType
 # Camera cancels up to 0.1s after brake is pressed, ECM allows 0.5s
 CAMERA_CANCEL_DELAY_FRAMES = 10
 # Enforce a minimum interval between steering messages to avoid a fault
-MIN_STEER_MSG_INTERVAL_MS = 10
+MIN_STEER_MSG_INTERVAL_MS = 8
 # Enforce a minimum interval between PRNDL2 and paddle messages to avoid a fault
 MIN_PRNDL_MSG_INTERVAL_MS = 20
 
