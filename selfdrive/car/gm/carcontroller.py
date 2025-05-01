@@ -119,14 +119,6 @@ class CarController(CarControllerBase):
 
     # Send CAN commands.
     can_sends = []
-    # Track last OEM message timestamps for PRNDL2 and Paddle
-    # if hasattr(CS, "prndl2_ts_nanos") and CS.prndl2_ts_nanos != 0:
-    #   self.last_oem_prndl2_ts_nanos = CS.prndl2_ts_nanos
-    # if hasattr(CS, "regen_paddle_ts_nanos") and CS.regen_paddle_ts_nanos != 0:
-    #   self.last_oem_regen_paddle_ts_nanos = CS.regen_paddle_ts_nanos
-
-    # Avoid spoofing PRNDL2/Paddle too soon after an OEM message (protect against fault overlap)
-    # last_prndl2_msg_ms = (now_nanos - max(self.last_oem_prndl2_ts_nanos, self.last_oem_regen_paddle_ts_nanos)) * 1e-6
 
     regen_active = (
       self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
