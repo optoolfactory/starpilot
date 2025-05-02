@@ -23,7 +23,7 @@ TransmissionType = car.CarParams.TransmissionType
 # Camera cancels up to 0.1s after brake is pressed, ECM allows 0.5s
 CAMERA_CANCEL_DELAY_FRAMES = 10
 # Enforce a minimum interval between steering messages to avoid a fault
-MIN_STEER_MSG_INTERVAL_MS = 8
+MIN_STEER_MSG_INTERVAL_MS = 10
 # Enforce a minimum interval between PRNDL2 and paddle messages to avoid a fault
 MIN_PRNDL_MSG_INTERVAL_MS = 20
 
@@ -127,8 +127,9 @@ class CarController(CarControllerBase):
       self.regen_paddle_pressed
     )
 
-    # Send regen paddle and PRNDL2 commands at 50Hz on even frames
-    send_prndl_frame = (self.frame % 2) == 0
+    # Send regen paddle and PRNDL2 commands at 66Hz, avoiding steer frame timing
+    steer_phase = self.last_steer_frame % 3
+    send_prndl_frame = (self.frame % 3) != steer_phase
     press_regen_paddle = None
 
     if regen_active and send_prndl_frame:
