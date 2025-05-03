@@ -120,24 +120,18 @@ class CarController(CarControllerBase):
     # Send CAN commands.
     can_sends = []
 
-    regen_active = (
-      self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
-      self.CP.openpilotLongitudinalControl and
-      CC.longActive and
-      self.regen_paddle_pressed
-    )
-
     # Send regen paddle and PRNDL2 commands at 66Hz, avoiding steer frame timing
     steer_phase = self.last_steer_frame % 3
     send_prndl_frame = (self.frame % 3) != steer_phase
-    press_regen_paddle = None
+    press_regen_paddle = self.regen_paddle_pressed
 
-    if regen_active and send_prndl_frame:
-      press_regen_paddle = True
-    elif not regen_active and getattr(self, "last_regen_active", False):
-      press_regen_paddle = False
-
-    if press_regen_paddle is not None:
+    if (
+      self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
+      self.CP.enableGasInterceptor and
+      self.CP.openpilotLongitudinalControl and
+      CC.longActive and
+      send_prndl_frame
+    ):
       can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, press_regen_paddle))
       can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, press_regen_paddle))
 
