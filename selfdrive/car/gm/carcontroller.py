@@ -317,6 +317,5 @@ class CarController(CarControllerBase):
     new_actuators.brake = self.apply_brake
     new_actuators.speed = self.apply_speed
 
-    self.last_regen_active = regen_active
     self.frame += 1
     return new_actuators, can_sends
