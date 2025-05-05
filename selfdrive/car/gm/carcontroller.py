@@ -125,14 +125,26 @@ class CarController(CarControllerBase):
     press_regen_paddle = self.regen_paddle_pressed
 
     if (
-      self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
-      self.CP.enableGasInterceptor and
-      self.CP.openpilotLongitudinalControl and
-      CC.longActive and
-      send_prndl_frame
+        self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
+        self.CP.enableGasInterceptor and
+        self.CP.openpilotLongitudinalControl and
+        CC.longActive and
+        send_prndl_frame and
+        self.regen_paddle_pressed
     ):
-      can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, press_regen_paddle))
-      can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, press_regen_paddle))
+      can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, True))
+      can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, True))
+    elif (
+        self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
+        self.CP.enableGasInterceptor and
+        self.CP.openpilotLongitudinalControl and
+        CC.longActive and
+        send_prndl_frame and
+        not self.regen_paddle_pressed and
+        press_regen_paddle
+    ):
+      can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, False))
+      can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, False))
 
 
     # Steering (Active: 50Hz, inactive: 10Hz)
