@@ -130,8 +130,6 @@ class CarController(CarControllerBase):
     if not hasattr(self, "prev_regen_paddle_pressed"):
       self.prev_regen_paddle_pressed = False
     press_regen_paddle = self.regen_paddle_pressed
-    # Ensure prev_regen_paddle_pressed is updated before off-send block
-    self.prev_regen_paddle_pressed = self.regen_paddle_pressed
     if (
         self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
         self.CP.enableGasInterceptor and
@@ -153,6 +151,8 @@ class CarController(CarControllerBase):
     ):
       can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, False))
       can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, False))
+    # Update previous paddle state after conditional blocks to ensure one-shot logic
+    self.prev_regen_paddle_pressed = self.regen_paddle_pressed
 
 
     # Steering (Active: 50Hz, inactive: 10Hz)
