@@ -24,9 +24,6 @@ TransmissionType = car.CarParams.TransmissionType
 CAMERA_CANCEL_DELAY_FRAMES = 10
 # Enforce a minimum interval between steering messages to avoid a fault
 MIN_STEER_MSG_INTERVAL_MS = 10
-# Enforce a minimum interval between PRNDL2 and paddle messages to avoid a fault
-MIN_PRNDL_MSG_INTERVAL_MS = 20
-
 # Constants for pitch compensation
 PITCH_DEADZONE = 0.01  # [radians] 0.01 ≈ 1% grade
 BRAKE_PITCH_FACTOR_BP = [5., 10.]  # [m/s] smoothly revert to planned accel at low speeds
@@ -60,6 +57,7 @@ class CarController(CarControllerBase):
     self.coeffDrag = 0.30
     self.airDensity = 1.225
 
+
     self.packer_pt = CANPacker(DBC[self.CP.carFingerprint]['pt'])
     self.packer_obj = CANPacker(DBC[self.CP.carFingerprint]['radar'])
     self.packer_ch = CANPacker(DBC[self.CP.carFingerprint]['chassis'])
@@ -74,41 +72,44 @@ class CarController(CarControllerBase):
     if not long_active:
       return 0., False
 
+    # Regen paddle hysteresis (200ms = 20 frames)
+    if not hasattr(self, 'regen_paddle_timer'):
+      self.regen_paddle_timer = 0
+
+    if self.aego < -0.7 and accel <= 0.0:
+      self.regen_paddle_timer += 1
+    else:
+      self.regen_paddle_timer = max(self.regen_paddle_timer - 1, 0)
+
+    self.regen_paddle_pressed = self.regen_paddle_timer >= 20
+
     press_regen_paddle = self.regen_paddle_pressed
 
-    # Updated regen gain ratios from bin-averaged 60–0 deceleration sweep
+    # Regen gain ratios from bin-averaged 60–0 deceleration sweep; Calculates stronger decel from paddle
     speed_mps = [0.559, 1.678, 2.797, 3.916, 5.035, 6.154, 7.273, 8.392, 9.511, 10.63,
                  11.749, 12.868, 13.987, 15.106, 16.225, 17.344, 18.463, 19.582, 20.701, 21.820,
                  22.939, 24.058, 25.177, 26.296]
     regen_gain_ratio = [1.01, 1.01, 1.02, 1.05, 1.08, 1.345979, 1.369975,
-                        1.376302, 1.388052, 1.370367, 1.388498, 1.386030, 1.405950, 1.387555,
-                        1.390392, 1.394946, 1.414915, 1.428535, 1.439611, 1.440106, 1.441438,
-                        1.439395, 1.446909, 1.445738]
+                         1.376302, 1.388052, 1.370367, 1.388498, 1.386030, 1.405950, 1.387555,
+                         1.390392, 1.394946, 1.414915, 1.428535, 1.439611, 1.440106, 1.441438,
+                         1.439395, 1.446909, 1.445738]
 
     gain = interp(car_velocity, speed_mps, regen_gain_ratio)
-    pedaloffset = interp(car_velocity, [0., 3, 6, 30], [0.10, 0.175, 0.240, 0.240])
 
+    pedaloffset = interp(car_velocity, [0., 3, 6, 30], [0.10, 0.175, 0.240, 0.240])
+    
     if press_regen_paddle:
-      pedal_gas = pedaloffset + (accel / gain) * 0.6
+      pedal_gas = clip((pedaloffset + (accel / gain) * 0.6), 0.0, 1.0)
     else:
-      pedal_gas = pedaloffset + accel * 0.6
+      pedal_gas = clip((pedaloffset + accel * 0.6), 0.0, 1.0)
+
 
     return pedal_gas, press_regen_paddle
 
 
   def update(self, CC, CS, now_nanos, frogpilot_toggles):
     self.CS = CS
-    self.aego = self.CS.out.aEgo
-    # Regen paddle hysteresis (200ms = 20 frames)
-    if not hasattr(self, 'regen_paddle_timer'):
-      self.regen_paddle_timer = 0
-
-    if self.aego < -0.7 and CC.actuators.accel <= 0.0:
-      self.regen_paddle_timer += 1
-    else:
-      self.regen_paddle_timer = max(self.regen_paddle_timer - 1, 0)
-
-    self.regen_paddle_pressed = self.regen_paddle_timer >= 20
+    self.aego = CS.out.aEgo
     actuators = CC.actuators
     accel = brake_accel = actuators.accel
     hud_control = CC.hudControl
@@ -120,7 +121,9 @@ class CarController(CarControllerBase):
     # Send CAN commands.
     can_sends = []
 
-    # Send regen paddle and PRNDL2 commands at 66Hz, avoiding steer frame timing
+
+
+    # Only apply PRNDL2 and regen paddle spoofing for cars in CC_REGEN_PADDLE_CAR and when gas interceptor is enabled
     steer_phase = self.last_steer_frame % 3
     send_prndl_frame = (self.frame % 3) != steer_phase
     # Track previous paddle state for one-shot off frame
@@ -129,7 +132,6 @@ class CarController(CarControllerBase):
     press_regen_paddle = self.regen_paddle_pressed
     # Ensure prev_regen_paddle_pressed is updated before off-send block
     self.prev_regen_paddle_pressed = self.regen_paddle_pressed
-
     if (
         self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
         self.CP.enableGasInterceptor and
@@ -269,7 +271,7 @@ class CarController(CarControllerBase):
           # GasRegenCmdActive needs to be 1 to avoid cruise faults. It describes the ACC state, not actuation
           can_sends.append(gmcan.create_gas_regen_command(self.packer_pt, CanBus.POWERTRAIN, self.apply_gas, idx, acc_engaged, at_full_stop))
           can_sends.append(gmcan.create_friction_brake_command(self.packer_ch, friction_brake_bus, self.apply_brake,
-                                                             idx, CC.enabled, near_stop, at_full_stop, self.CP))
+                                                               idx, CC.enabled, near_stop, at_full_stop, self.CP))
 
           # Send dashboard UI commands (ACC status)
           send_fcw = hud_alert == VisualAlert.fcw
