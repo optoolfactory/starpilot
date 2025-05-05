@@ -121,7 +121,8 @@ class CarController(CarControllerBase):
     can_sends = []
 
     # Send regen paddle and PRNDL2 commands at 66Hz, avoiding steer frame timing
-    send_prndl_frame = self.frame != self.last_steer_frame
+    steer_phase = self.last_steer_frame % 3
+    send_prndl_frame = (self.frame % 3) != steer_phase
     press_regen_paddle = self.regen_paddle_pressed
 
     if (
