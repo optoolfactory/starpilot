@@ -123,7 +123,12 @@ class CarController(CarControllerBase):
     # Send regen paddle and PRNDL2 commands at 66Hz, avoiding steer frame timing
     steer_phase = self.last_steer_frame % 3
     send_prndl_frame = (self.frame % 3) != steer_phase
+    # Track previous paddle state for one-shot off frame
+    if not hasattr(self, "prev_regen_paddle_pressed"):
+      self.prev_regen_paddle_pressed = False
     press_regen_paddle = self.regen_paddle_pressed
+    # Ensure prev_regen_paddle_pressed is updated before off-send block
+    self.prev_regen_paddle_pressed = self.regen_paddle_pressed
 
     if (
         self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
@@ -142,7 +147,7 @@ class CarController(CarControllerBase):
         CC.longActive and
         send_prndl_frame and
         not self.regen_paddle_pressed and
-        press_regen_paddle
+        self.prev_regen_paddle_pressed  # Ensure we only send off frame when the paddle was just released
     ):
       can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, False))
       can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, False))
