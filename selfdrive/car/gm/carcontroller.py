@@ -275,23 +275,27 @@ class CarController(CarControllerBase):
 
           # Send dashboard UI commands (ACC status)
           send_fcw = hud_alert == VisualAlert.fcw
-          can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, CanBus.POWERTRAIN, CC.enabled,
-                                                              hud_v_cruise * CV.MS_TO_KPH, hud_control, send_fcw))
+          if self.frame % 10 == 0:
+            can_sends.append(gmcan.create_acc_dashboard_command(self.packer_pt, CanBus.POWERTRAIN, CC.enabled,
+                                                                hud_v_cruise * CV.MS_TO_KPH, hud_control, send_fcw))
       else:
         # to keep accel steady for logs when not sending gas
         accel += self.accel_g
 
       # Radar needs to know current speed and yaw rate (50hz),
-      # and that ADAS is alive (10hz)
+      # and that ADAS is alive (5hz/25hz, reduced frequency)
       if not self.CP.radarUnavailable:
         tt = self.frame * DT_CTRL
-        time_and_headlights_step = 10
+
+        # Reduced ADAS time and headlights to 5Hz
+        time_and_headlights_step = 20
         if self.frame % time_and_headlights_step == 0:
           idx = (self.frame // time_and_headlights_step) % 4
           can_sends.append(gmcan.create_adas_time_status(CanBus.OBSTACLE, int((tt - self.start_time) * 60), idx))
           can_sends.append(gmcan.create_adas_headlights_status(self.packer_obj, CanBus.OBSTACLE))
 
-        speed_and_accelerometer_step = 2
+        # Reduced speed and steering status to 25Hz
+        speed_and_accelerometer_step = 4
         if self.frame % speed_and_accelerometer_step == 0:
           idx = (self.frame // speed_and_accelerometer_step) % 4
           can_sends.append(gmcan.create_adas_steering_status(CanBus.OBSTACLE, idx))
@@ -325,7 +329,7 @@ class CarController(CarControllerBase):
 
     if self.CP.networkLocation == NetworkLocation.fwdCamera:
       # Silence "Take Steering" alert sent by camera, forward PSCMStatus with HandsOffSWlDetectionStatus=1
-      if self.frame % 10 == 0:
+      if self.frame % 20 == 0:
         can_sends.append(gmcan.create_pscm_status(self.packer_pt, CanBus.CAMERA, CS.pscm_status))
 
     new_actuators = actuators.as_builder()
