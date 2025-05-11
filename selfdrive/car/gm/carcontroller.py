@@ -126,6 +126,7 @@ class CarController(CarControllerBase):
     # Only apply PRNDL2 and regen paddle spoofing for cars in CC_REGEN_PADDLE_CAR and when gas interceptor is enabled
     steer_phase = self.last_steer_frame % 3
     send_prndl_frame = (self.frame % 3) != steer_phase
+    send_paddle_frame = (self.frame % 10) == 0
     # Track previous paddle state for one-shot off frame
     if not hasattr(self, "prev_regen_paddle_pressed"):
       self.prev_regen_paddle_pressed = False
@@ -139,6 +140,8 @@ class CarController(CarControllerBase):
         self.regen_paddle_pressed
     ):
       can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, True))
+      if send_paddle_frame:
+        can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, press_regen_paddle))
     elif (
         self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
         self.CP.enableGasInterceptor and
@@ -149,6 +152,8 @@ class CarController(CarControllerBase):
         self.prev_regen_paddle_pressed  # Ensure we only send off frame when the paddle was just released
     ):
       can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, False))
+      if send_paddle_frame:
+        can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, press_regen_paddle))
     # Update previous paddle state after conditional blocks to ensure one-shot logic
     self.prev_regen_paddle_pressed = self.regen_paddle_pressed
 
