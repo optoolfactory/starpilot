@@ -139,7 +139,6 @@ class CarController(CarControllerBase):
         self.regen_paddle_pressed
     ):
       can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, True))
-      can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, True))
     elif (
         self.CP.carFingerprint in CC_REGEN_PADDLE_CAR and
         self.CP.enableGasInterceptor and
@@ -150,7 +149,6 @@ class CarController(CarControllerBase):
         self.prev_regen_paddle_pressed  # Ensure we only send off frame when the paddle was just released
     ):
       can_sends.append(gmcan.create_prndl2_command(self.packer_pt, CanBus.POWERTRAIN, False))
-      can_sends.append(gmcan.create_regen_paddle_command(self.packer_pt, CanBus.POWERTRAIN, False))
     # Update previous paddle state after conditional blocks to ensure one-shot logic
     self.prev_regen_paddle_pressed = self.regen_paddle_pressed
 
