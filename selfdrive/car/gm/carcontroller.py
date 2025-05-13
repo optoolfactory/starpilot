@@ -126,7 +126,7 @@ class CarController(CarControllerBase):
     # Only apply PRNDL2 and regen paddle spoofing for cars in CC_REGEN_PADDLE_CAR and when gas interceptor is enabled
     steer_phase = self.last_steer_frame % 3
     send_prndl_frame = (self.frame % 3) != steer_phase
-    send_paddle_frame = (self.frame % 10) == 0
+    send_paddle_frame = (self.frame % 6) != steer_phase
     # Track previous paddle state for one-shot off frame
     if not hasattr(self, "prev_regen_paddle_pressed"):
       self.prev_regen_paddle_pressed = False
