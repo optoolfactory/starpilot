@@ -70,7 +70,7 @@ procs = [
   PythonProcess("dmonitoringmodeld", "selfdrive.modeld.dmonitoringmodeld", driverview, enabled=(not PC or WEBCAM)),
   NativeProcess("encoderd", "system/loggerd", ["./encoderd"], allow_logging),
   NativeProcess("stream_encoderd", "system/loggerd", ["./encoderd", "--stream"], notcar),
-  NativeProcess("loggerd", "system/loggerd", ["./loggerd"], allow_logging),
+  #NativeProcess("loggerd", "system/loggerd", ["./loggerd"], allow_logging),
   NativeProcess("modeld", "selfdrive/modeld", ["./modeld"], run_new_modeld),
   NativeProcess("mapsd", "selfdrive/navd", ["./mapsd"], run_classic_modeld),
   PythonProcess("navmodeld", "selfdrive.classic_modeld.navmodeld", run_classic_modeld),
